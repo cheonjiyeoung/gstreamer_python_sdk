@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gstreamer-python-sdk"
+description = "gi 기반 GStreamer 를 데이터모델과 Enum 으로 다루는 SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["version"]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Multimedia :: Video",
+    "Operating System :: POSIX :: Linux",
+]
+
+# PyGObject 와 GStreamer 는 pip 으로 설치하지 않는다. 시스템 패키지(python3-gi,
+# gir1.2-gstreamer-1.0)를 쓰며, typelib 과 플러그인이 배포판/JetPack 에 묶여
+# 있기 때문이다. 그래서 런타임 의존성은 비어 있다.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["mypy>=1.8"]
+examples = ["numpy>=1.20"]
+
+[project.scripts]
+# 설치된 GStreamer 를 introspect 해서 .pyi 타입 스텁을 다시 생성한다.
+gst-sdk-codegen = "gstreamer_python_sdk.codegen:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "gstreamer_python_sdk.__version__" }
+
+[tool.setuptools]
+packages = ["gstreamer_python_sdk", "gstreamer_python_sdk.elements"]
+
+[tool.setuptools.package-data]
+"gstreamer_python_sdk" = ["py.typed"]
+"gstreamer_python_sdk.elements" = ["*.pyi"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+
+# PyGObject 는 타입 스텁을 제공하지 않는다. gi 경계에서는 검사를 포기하고,
+# 그 대신 SDK 가 노출하는 타입(.pyi 포함)을 엄격하게 지킨다.
+[[tool.mypy.overrides]]
+module = ["gi", "gi.*", "cv2"]
+ignore_missing_imports = true
